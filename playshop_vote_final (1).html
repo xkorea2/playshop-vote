@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>플레이샵 후보지 투표</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .vote-section {
+            margin-bottom: 40px;
+        }
+
+        .vote-section h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 18px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+        }
+
+        .option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .option.selected input[type="radio"] {
+            accent-color: white;
+        }
+
+        .option label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 60px 30px;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .success-message h2 {
+            color: #28a745;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .success-message p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+
+            .option label {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 플레이샵 후보지 투표</h1>
+            <p>각 카테고리에서 1개씩 선택해주세요 (총 2표)</p>
+        </div>
+
+        <div class="content">
+            <div class="alert" id="alert"></div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>투표를 제출하는 중입니다...</p>
+            </div>
+
+            <form id="voteForm">
+                <!-- 첫 번째 투표 섹션 -->
+                <div class="vote-section">
+                    <h2>📍 카테고리 1: 실내 활동</h2>
+                    <div class="options">
+                        <div class="option" onclick="selectOption(this, 'category1')">
+                            <input type="radio" name="category1" value="방탈출" id="opt1_1">
+                            <label for="opt1_1">방탈출</label>
+                        </div>
+                        <div class="option" onclick="selectOption(this, 'category1')">
+                            <input type="radio" name="category1" value="도자기 공방" id="opt1_2">
+                            <label for="opt1_2">도자기 공방</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 두 번째 투표 섹션 -->
+                <div class="vote-section">
+                    <h2>🌊 카테고리 2: 야외 활동</h2>
+                    <div class="options">
+                        <div class="option" onclick="selectOption(this, 'category2')">
+                            <input type="radio" name="category2" value="피크닉 - 남한산성" id="opt2_1">
+                            <label for="opt2_1">피크닉 - 남한산성</label>
+                        </div>
+                        <div class="option" onclick="selectOption(this, 'category2')">
+                            <input type="radio" name="category2" value="피크닉 - 어린이대공원(서울)" id="opt2_2">
+                            <label for="opt2_2">피크닉 - 어린이대공원(서울)</label>
+                        </div>
+                        <div class="option" onclick="selectOption(this, 'category2')">
+                            <input type="radio" name="category2" value="피크닉 - 과천 서울대공원(과천)" id="opt2_3">
+                            <label for="opt2_3">피크닉 - 과천 서울대공원(과천)</label>
+                        </div>
+                        <div class="option" onclick="selectOption(this, 'category2')">
+                            <input type="radio" name="category2" value="강 - 북한강쪽" id="opt2_4">
+                            <label for="opt2_4">강 - 북한강쪽</label>
+                        </div>
+                        <div class="option" onclick="selectOption(this, 'category2')">
+                            <input type="radio" name="category2" value="강 - 한강쪽" id="opt2_5">
+                            <label for="opt2_5">강 - 한강쪽</label>
+                        </div>
+                        <div class="option" onclick="selectOption(this, 'category2')">
+                            <input type="radio" name="category2" value="울릉도 & 독도" id="opt2_6">
+                            <label for="opt2_6">울릉도 & 독도</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">투표하기</button>
+            </form>
+
+            <div class="success-message" id="successMessage">
+                <div class="success-icon">✅</div>
+                <h2>투표가 완료되었습니다!</h2>
+                <p>소중한 의견 감사합니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIiCX3-DPFNk_yPCOuV7_TJtfVIZ8LS8zPVrFvsbHJxvxp1MQTNnScYYBzLbwzcmUz/exec';
+
+        function selectOption(element, category) {
+            // 같은 카테고리의 다른 선택 해제
+            const siblings = element.parentElement.querySelectorAll('.option');
+            siblings.forEach(sib => sib.classList.remove('selected'));
+            
+            // 현재 선택 활성화
+            element.classList.add('selected');
+            element.querySelector('input').checked = true;
+        }
+
+        function showAlert(message, type = 'warning') {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = 'alert show ' + type;
+            setTimeout(() => alert.classList.remove('show'), 4000);
+        }
+
+        document.getElementById('voteForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const category1 = document.querySelector('input[name="category1"]:checked');
+            const category2 = document.querySelector('input[name="category2"]:checked');
+            
+            if (!category1 || !category2) {
+                showAlert('두 카테고리 모두 선택해주세요!', 'warning');
+                return;
+            }
+
+            // 로딩 표시
+            const loading = document.getElementById('loading');
+            const submitBtn = document.getElementById('submitBtn');
+            const form = document.getElementById('voteForm');
+            
+            loading.classList.add('show');
+            submitBtn.disabled = true;
+            
+            try {
+                // Google Sheets에 데이터 전송
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // CORS 우회
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        category1: category1.value,
+                        category2: category2.value
+                    })
+                });
+
+                // no-cors 모드에서는 응답을 확인할 수 없으므로 성공으로 간주
+                loading.classList.remove('show');
+                form.style.display = 'none';
+                document.getElementById('successMessage').classList.add('show');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                loading.classList.remove('show');
+                submitBtn.disabled = false;
+                showAlert('투표 전송 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
